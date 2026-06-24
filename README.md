@@ -85,6 +85,26 @@ There is a sample Kubernetes manifest in `kubernetes.yaml`. Basic steps:
 
 Adjust service and ingress settings as needed for your cluster.
 
+## CI/CD
+
+The GitHub Actions workflow in `.github/workflows/ci-cd.yml` runs for pull
+requests targeting `main` and for direct pushes to `main`. It:
+
+- scans the Git history for committed secrets;
+- scans dependencies for high and critical vulnerabilities;
+- builds and scans the Docker image; and
+- publishes commit-SHA and `latest` tags to Docker Hub after a successful push
+  to `main`.
+
+Configure these GitHub repository secrets before merging the workflow:
+
+- `DOCKERHUB_USERNAME`: the Docker Hub account that can publish
+  `biswajitind/agent-milu`;
+- `DOCKERHUB_TOKEN`: a Docker Hub access token for that account.
+
+Pull request workflows build and scan the image but never log in to Docker Hub
+or publish it.
+
 ## What it does today
 
 - Uses the OpenAI API (or compatible) to perform LLM calls from `milu.py`.
@@ -101,4 +121,3 @@ Feel free to open issues or PRs. If you add features that require configuration,
 ## License
 
 MIT-style (add your preferred license file)
-

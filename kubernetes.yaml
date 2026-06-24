@@ -31,7 +31,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: milu
-          image: biswajitind/agent-milu:latest
+          image: biswajitindgmail/agent-milu:latest
           imagePullPolicy: Always
           args:
             - --bot
