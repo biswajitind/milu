@@ -37,6 +37,8 @@ The project is intentionally minimal so you can experiment with agent patterns a
 	```bash
 	export OPENAI_API_KEY="sk-..."
 	export TELEGRAM_BOT_TOKEN="123456:ABC-..."
+	# Optional comma-separated Telegram chat IDs. Unset or empty accepts all.
+	export ALLOWED_TELEGRAM_IDS="1793542281,987654321"
 	# Optionally set TELEGRAM_CHAT_ID if you want messages routed to a single chat
 	export TELEGRAM_CHAT_ID="..."
 	```
@@ -65,7 +67,8 @@ There is a sample Kubernetes manifest in `kubernetes.yaml`. Basic steps:
 	```bash
 	kubectl create secret generic milu-secrets \
 	  --from-literal=OPENAI_API_KEY="sk-..." \
-	  --from-literal=TELEGRAM_BOT_TOKEN="123456:ABC-..."
+	  --from-literal=TELEGRAM_BOT_TOKEN="123456:ABC-..." \
+	  --from-literal=ALLOWED_TELEGRAM_IDS="1793542281,987654321"
 	```
 
 3. Edit `kubernetes.yaml` to use your image `your-registry/milu:latest` and confirm it references the `milu-secrets` secret for env vars.
@@ -101,4 +104,3 @@ Feel free to open issues or PRs. If you add features that require configuration,
 ## License
 
 MIT-style (add your preferred license file)
-

@@ -4,9 +4,6 @@ import os
 import openai
 from dotenv import load_dotenv
 
-# List of telegram IDs from which the bot will accept messages. If empty, accepts from all.
-ALLOWED_TELEGRAM_IDS = set('1793542281')
-
 
 def configure_openai():
     load_dotenv()
@@ -20,6 +17,23 @@ def configure_openai():
 
     openai.api_key = api_key
     openai.api_base = api_url
+
+
+def get_allowed_telegram_ids():
+    configured_ids = os.getenv("ALLOWED_TELEGRAM_IDS", "")
+    if not configured_ids.strip():
+        return set()
+
+    try:
+        return {
+            int(telegram_id.strip())
+            for telegram_id in configured_ids.split(",")
+            if telegram_id.strip()
+        }
+    except ValueError as error:
+        raise RuntimeError(
+            "ALLOWED_TELEGRAM_IDS must be a comma-separated list of integers"
+        ) from error
 
 
 def process_message(message):
@@ -57,6 +71,7 @@ def run_bot():
     if not telegram_token:
         raise RuntimeError("Please set TELEGRAM_BOT_TOKEN in your .env file")
 
+    allowed_telegram_ids = get_allowed_telegram_ids()
     bot = telegram.Bot(token=telegram_token)
     offset = None
     print("Milu Telegram bot is running. Press Ctrl+C to stop.")
@@ -70,14 +85,19 @@ def run_bot():
                 if not update.message or not update.message.text:
                     continue
 
+                chat_id = update.message.chat_id
+                if allowed_telegram_ids and chat_id not in allowed_telegram_ids:
+                    print(f"Ignoring message from unauthorized Telegram ID: {chat_id}")
+                    continue
+
                 try:
-                    print(f"Received message from {update.message.chat_id}: {update.message.text}")
+                    print(f"Received message from {chat_id}: {update.message.text}")
                     print(update.message)
                     reply = process_message(update.message.text)
                 except Exception as error:
                     reply = f"Unable to process your message: {error}"
 
-                bot.send_message(chat_id=update.message.chat_id, text=reply)
+                bot.send_message(chat_id=chat_id, text=reply)
     except KeyboardInterrupt:
         print("\nTelegram bot stopped.")
 
