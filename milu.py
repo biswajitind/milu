@@ -1,8 +1,12 @@
 import argparse
+import json
 import os
+from pathlib import Path
 
 import openai
 from dotenv import load_dotenv
+
+TELEGRAM_ALLOWLIST_PATH = Path(__file__).with_name("telegram_allowed_ids.json")
 
 
 def configure_openai():
@@ -20,20 +24,22 @@ def configure_openai():
 
 
 def get_allowed_telegram_ids():
-    configured_ids = os.getenv("ALLOWED_TELEGRAM_IDS", "")
-    if not configured_ids.strip():
-        return set()
-
     try:
-        return {
-            int(telegram_id.strip())
-            for telegram_id in configured_ids.split(",")
-            if telegram_id.strip()
-        }
-    except ValueError as error:
+        configured_ids = json.loads(TELEGRAM_ALLOWLIST_PATH.read_text())
+    except (OSError, json.JSONDecodeError) as error:
         raise RuntimeError(
-            "ALLOWED_TELEGRAM_IDS must be a comma-separated list of integers"
+            f"Unable to read Telegram allowlist from {TELEGRAM_ALLOWLIST_PATH}: {error}"
         ) from error
+
+    if not isinstance(configured_ids, list) or any(
+        isinstance(telegram_id, bool) or not isinstance(telegram_id, int)
+        for telegram_id in configured_ids
+    ):
+        raise RuntimeError(
+            f"{TELEGRAM_ALLOWLIST_PATH} must contain a JSON array of integer Telegram IDs"
+        )
+
+    return set(configured_ids)
 
 
 def process_message(message):

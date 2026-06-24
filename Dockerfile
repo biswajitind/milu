@@ -8,7 +8,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir --requirement requirements.txt
 
-COPY milu.py .
+COPY milu.py telegram_allowed_ids.json ./
 
 RUN useradd --create-home --uid 10001 milu
 USER milu
