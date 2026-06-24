@@ -41,7 +41,15 @@ The project is intentionally minimal so you can experiment with agent patterns a
 	export TELEGRAM_CHAT_ID="..."
 	```
 
-4. Run the app locally:
+4. Add the Telegram chat IDs allowed to use the bot to
+   `telegram_allowed_ids.json`. The file contains a JSON array of integers. An
+   empty array accepts messages from all chat IDs:
+
+	```json
+	[1793542281, 987654321]
+	```
+
+5. Run the app locally:
 
 	```bash
 	python milu.py
@@ -68,7 +76,10 @@ There is a sample Kubernetes manifest in `kubernetes.yaml`. Basic steps:
 	  --from-literal=TELEGRAM_BOT_TOKEN="123456:ABC-..."
 	```
 
-3. Edit `kubernetes.yaml` to use your image `your-registry/milu:latest` and confirm it references the `milu-secrets` secret for env vars.
+3. Edit `kubernetes.yaml` to use your image
+   `your-registry/milu:latest`, set the IDs in the
+   `telegram_allowed_ids.json` ConfigMap entry, and confirm the deployment
+   references the `milu-secrets` secret for environment variables.
 
 4. Apply the manifest:
 
@@ -101,4 +112,3 @@ Feel free to open issues or PRs. If you add features that require configuration,
 ## License
 
 MIT-style (add your preferred license file)
-

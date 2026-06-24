@@ -1,11 +1,12 @@
 import argparse
+import json
 import os
+from pathlib import Path
 
 import openai
 from dotenv import load_dotenv
 
-# List of telegram IDs from which the bot will accept messages. If empty, accepts from all.
-ALLOWED_TELEGRAM_IDS = set('1793542281')
+TELEGRAM_ALLOWLIST_PATH = Path(__file__).with_name("telegram_allowed_ids.json")
 
 
 def configure_openai():
@@ -20,6 +21,25 @@ def configure_openai():
 
     openai.api_key = api_key
     openai.api_base = api_url
+
+
+def get_allowed_telegram_ids():
+    try:
+        configured_ids = json.loads(TELEGRAM_ALLOWLIST_PATH.read_text())
+    except (OSError, json.JSONDecodeError) as error:
+        raise RuntimeError(
+            f"Unable to read Telegram allowlist from {TELEGRAM_ALLOWLIST_PATH}: {error}"
+        ) from error
+
+    if not isinstance(configured_ids, list) or any(
+        isinstance(telegram_id, bool) or not isinstance(telegram_id, int)
+        for telegram_id in configured_ids
+    ):
+        raise RuntimeError(
+            f"{TELEGRAM_ALLOWLIST_PATH} must contain a JSON array of integer Telegram IDs"
+        )
+
+    return set(configured_ids)
 
 
 def process_message(message):
@@ -57,6 +77,7 @@ def run_bot():
     if not telegram_token:
         raise RuntimeError("Please set TELEGRAM_BOT_TOKEN in your .env file")
 
+    allowed_telegram_ids = get_allowed_telegram_ids()
     bot = telegram.Bot(token=telegram_token)
     offset = None
     print("Milu Telegram bot is running. Press Ctrl+C to stop.")
@@ -70,14 +91,19 @@ def run_bot():
                 if not update.message or not update.message.text:
                     continue
 
+                chat_id = update.message.chat_id
+                if allowed_telegram_ids and chat_id not in allowed_telegram_ids:
+                    print(f"Ignoring message from unauthorized Telegram ID: {chat_id}")
+                    continue
+
                 try:
-                    print(f"Received message from {update.message.chat_id}: {update.message.text}")
+                    print(f"Received message from {chat_id}: {update.message.text}")
                     print(update.message)
                     reply = process_message(update.message.text)
                 except Exception as error:
                     reply = f"Unable to process your message: {error}"
 
-                bot.send_message(chat_id=update.message.chat_id, text=reply)
+                bot.send_message(chat_id=chat_id, text=reply)
     except KeyboardInterrupt:
         print("\nTelegram bot stopped.")
 
