@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  IMAGE_NAME: biswajitind/agent-milu
+  IMAGE_NAME: biswajitindgmail/agent-milu
 
 jobs:
   secret-scan:
